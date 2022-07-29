@@ -1,9 +1,9 @@
 
 from collections import defaultdict
-from lib2to3.pytree import NodePattern
 import math
-import operator
-from functools import reduce
+from collections import OrderedDict
+import string
+
 
 import pyperclip
 
@@ -102,7 +102,9 @@ class Graph():
             self.edges[from_node].append(to_node)
             self.weights[(from_node, to_node)] = weight
             
-
+def replace_str_index(text,index=0,replacement=''):
+    return '%s%s%s'%(text[:index],replacement,text[index+1:])
+ 
 
 def dijsktra(graph, initial, end):
     # shortest paths is a dict of nodes
@@ -142,19 +144,6 @@ def dijsktra(graph, initial, end):
     overwatch_graph[initial][end] = path[1];
     return path
 
-def run_length_encoding(seq):
-  compressed = []
-  count = 1
-  char = seq[0]
-  for i in range(1,len(seq)):
-    if seq[i] == char:
-      count = count + 1
-    else :
-      compressed.append([char,count])
-      char = seq[i]
-      count = 1
-  compressed.append([char,count])
-  return compressed
 
 import MainFile
 
@@ -179,6 +168,7 @@ for i in range(v):
                 overwatch_graph[i][t] = 999;
 
 stringgraph = ["" for y in range(v)]
+secondgraph = stringgraph
 encoded = []
 
 
@@ -196,10 +186,29 @@ for i in range(v):
 
     stringgraph[i] = tempstring
 
+stringgraph = str(stringgraph)
+
+stringgraph = stringgraph.replace("[", "Array(")
+stringgraph = stringgraph.replace("]", ")")
+secondgraph = stringgraph
+secondgraph = stringgraph.replace("Array(", "").replace(")", "")
+secondgraph = secondgraph.split(",")
+
+for i in range(len(secondgraph)):
+    secondgraph[i] = secondgraph[i].replace("'", '")')
+    secondgraph[i] = secondgraph[i].replace('")', 'Custom String("', 1)
+
+secondgraph = str(secondgraph)
+secondgraph = secondgraph.replace("[", "Array(")
+secondgraph = secondgraph.replace("]", ")")
+secondgraph = str(secondgraph)
+
+secondgraph = secondgraph.replace("'", "")
+print(secondgraph)
+    
 
 
-print(stringgraph)
-for i 
+
 print("\n\n\n\nOver")
-pyperclip.copy("variables\n{\nglobal:\n0: nodePOS\n 1: connections\n 2: _arrayConstructor\n}")
+pyperclip.copy("actions\n{\n    Global.stringmap = " + secondgraph + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n}')
 
