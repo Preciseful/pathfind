@@ -209,5 +209,5 @@ print(secondgraph)
 
     
 print("\n\n\n\nOver")
-pyperclip.copy("actions\n{\n    Global.stringmap = " + secondgraph + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n}')
+pyperclip.copy("actions\n{\n    Global.graph = " + secondgraph + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n}')
 
