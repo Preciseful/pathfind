@@ -1,0 +1,41 @@
+import "main.ostw";
+
+rule:"Select node"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(IsButtonHeld(EventPlayer(), Button.PrimaryFire))
+    if(editor == Edit.Editing)
+        {
+            if(!ArrayContains(selectednode, nodePOS.SortedArray(node => AngleBetweenVectors(FacingDirectionOf(), DirectionTowards(EyePosition(), node)))[0]))
+            {
+                ModifyVariable(selectednode, Operation.AppendToArray, nodePOS.FilteredArray(node => IsInLineOfSight(node, EventPlayer())).SortedArray(node => AngleBetweenVectors(FacingDirectionOf(), DirectionTowards(EyePosition(), node)))[0]);
+                define selectID = grabID(selectednode.Last);
+                currColor[selectID] = secondcolor;
+            }
+        }
+
+rule:"Deselect node"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+    if(editor == Edit.Editing)
+        {
+            define deselectedNode = selectednode.SortedArray(node => AngleBetweenVectors(FacingDirectionOf(), DirectionTowards(EyePosition(), node)))[0];
+            define deselectedID = IndexOfArrayValue(nodePOS, deselectedNode);
+            currColor[deselectedID] = firstcolor;
+            ModifyVariable(selectednode, Operation.RemoveFromArrayByValue, deselectedNode);
+        }
+rule:"Deselect ALL nodes"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(IsButtonHeld(EventPlayer(), Button.Reload))
+    if(editor == Edit.Editing)
+        {
+            //? Selections is made so CountOf() doesn't re-evaluate, otherwise it will stop mid process.
+            Number selections = CountOf(selectednode);
+            for (define i = 0; i < selections; i++)
+            {
+                currColor[IndexOfArrayValue(nodePOS, selectednode[0])] = firstcolor;
+                ModifyVariable(selectednode, Operation.RemoveFromArrayByIndex, 0);
+            }
+        }

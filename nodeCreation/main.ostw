@@ -1,0 +1,499 @@
+import "customGameSettings.lobby";
+import "editorSelect.ostw";
+import "editorConnect.ostw";
+import "pathfind.ostw";
+
+//! Variables
+    //? GLOBAL
+        //* Nodes Subsection
+            globalvar define[] nodePOS = [];
+            define firstcolor: Color.Green;
+            define secondcolor: Color.Yellow;
+            playervar Number[] nodeID = [];
+            playervar define[] nodeEFF = [];
+            playervar define[] nodeTEXT = [];
+            playervar define[] nodeTexCon = [];
+            playervar Color[] currColor = [];
+            playervar define[] coneff = [];
+            globalvar Number[] connections = [];
+            playervar Number[] isPreloaded = [];
+            playervar Number effLimit = 0;
+            
+
+    //? PLAYER  
+        //* Nodes Subsection
+            playervar Vector[] selectednode = [];
+        //* Editor
+            playervar String editor = "Creation";
+            playervar define[] texts = [];
+            playervar Color editorcolor = Color.Rose;
+            playervar define[] open_list = [];
+            playervar define[] closed_list = [];
+            playervar define[] children = [];
+            playervar define[] f = [];
+            playervar define[] g = [];
+            playervar define[] h = [];
+            playervar Vector source;
+            playervar Vector finish;
+            playervar Number sID;
+            playervar Number fID;
+            playervar define[] parents;
+            playervar Boolean fFound;
+            playervar Number indexthing;
+            playervar Number qID;
+            playervar Number successor;
+            playervar define q;
+            playervar define competition;
+            playervar define[] path;
+
+            
+
+//! Macros
+    //* Editor
+        enum Edit
+            {
+                Creation = "Creation",
+                Editing = "Editing",
+                Pathfind = "Pathfind",
+                Bake = "Bake"
+            }
+        void Commentary(in String text, in Number sortord)
+            {
+                CreateHudText(EventPlayer(), null, null, text, Location.Left, sortord, null, null, Color.White, HudTextRev.String, Spectators.DefaultVisibility);
+                ModifyVariable(texts, Operation.AppendToArray, LastTextID());
+            }
+        void CleanUp()
+            {
+                while(texts > 0)
+                {
+                    DestroyHudText(texts[0]);
+                    ModifyVariable(texts, Operation.RemoveFromArrayByIndex, 0);
+                }
+            }
+
+    //* Nodes Subsection
+        public define pos()
+            {
+               return EvaluateOnce(PositionOf()) + Vector(0, 1, 0);
+            }
+        public define ray()
+            {
+                return RayCastHitPosition(EyePosition(), EyePosition() + FacingDirectionOf() * 1000, null, AllPlayers(), false);
+            }
+        
+        void nodeCreate()
+            {
+                ModifyVariable(nodePOS, Operation.AppendToArray, pos());
+                ModifyVariable(nodeID, Operation.AppendToArray, CountOf(nodePOS) - 1);
+
+                define index = LastOf(nodeID);
+                currColor[index] = firstcolor;
+                connections[index] = [];
+
+                CreateEffect(AllPlayers(), 
+                    Type:           Effect.Sphere, 
+                    Color:          currColor[grabID(EvaluateOnce(pos()))], 
+                    Position:       pos(), 
+                    Radius:         0.5, 
+                    Reevaluation:   EffectRev.VisibleToAndColor);
+                nodeEFF[index] = LastCreatedEntity();
+
+                CreateInWorldText(AllPlayers(), 
+                    Header:         grabID(EvaluateOnce(pos())), 
+                    Position:       pos(),
+                    Scale:          2,
+                    Clipping:       Clipping.DoNotClip,
+                    Reevaluation:   InworldTextRev.VisibleToStringAndColor,
+                    TextColor:      currColor[grabID(EvaluateOnce(pos()))],
+                    Spectators.DefaultVisibility);
+                nodeTEXT[index] = LastTextID();
+
+                /*CreateInWorldText(AllPlayers(), 
+                    Header:         <"<0>, <1>", connections[EvaluateOnce(index)][0], connections[EvaluateOnce(index)][1]>, 
+                    Position:       pos() - Vector(0, 0.5, 0),
+                    Scale:          1,
+                    Clipping:       Clipping.DoNotClip,
+                    Reevaluation:   InworldTextRev.VisibleToStringAndColor,
+                    TextColor:      currColor[EvaluateOnce(index)],
+                    Spectators.DefaultVisibility);
+                nodeTexCon[index] = LastTextID();*/
+            }
+        public define grabID(in define Value)
+            {
+                return IndexOfArrayValue(nodePOS, Value);
+            }
+    //* Pathfind
+        define grabAdjacent(in Number Node)
+            {
+                return connections[Node];
+            }
+        Boolean isAdjacent(in Number Node, in Number check)
+            {
+                define connectionsTT = connections[Node];
+                if(ArrayContains(connectionsTT, check))
+                {
+                    return true;
+                }
+                else 
+                {
+                    return false;
+                }
+            }
+        define getPos(in Number ID)
+            {
+                return nodePOS[ID];
+            }
+        void Pathfind(in Vector START, in Vector END)
+            {
+                define WAIT_TIME: 0.016;
+                define INF: 99999999;
+                //? Set start the closest in LoS node
+                Vector source = nodePOS.FilteredArray(node => IsInLineOfSight(node, START)).
+                    SortedArray(node => DistanceBetween(node, START))[0];
+                Vector finish = nodePOS.FilteredArray(node => IsInLineOfSight(node, END)).
+                    SortedArray(node => DistanceBetween(node, END))[0];
+                
+                Number sID = grabID(source);
+                Number fID = grabID(finish);
+
+                open_list = [sID];
+                closed_list = [];
+                children = [];
+
+                f = [];
+                g = [];
+                h = [];
+
+                Boolean fFound = false;
+
+                parents = [];
+
+                f[sID] = 1;
+
+                parents[sID] = sID;
+
+                while(open_list.Length > 0 && !fFound)
+                {
+                    Wait(WAIT_TIME);
+                    //? node with least F on open list
+                    indexthing = f.FilteredArray(fvalue => open_list.Contains(f.IndexOf(fvalue)) && fvalue != 0).SortedArray(score => AbsoluteValue(score))[0];
+
+                    //? id of node
+                    qID = f.IndexOf(indexthing);
+
+                    open_list.ModRemoveByValue(qID);
+
+                    //? Q's successors
+                    children[qID] = grabAdjacent(qID);
+                    
+                        for (define i = 0; i < CountOf(children[qID]); i++)
+                        {
+                            SkipIf(i % 2 == 0, 1);
+                            Wait(WAIT_TIME);
+
+                            //? Current successor
+                            successor = children[qID][i];
+                            if(!closed_list.Contains(successor) && !open_list.Contains(successor))
+                            {
+                                parents[successor] = qID;
+                            }
+
+                            if(successor == fID)
+                            {
+                                fFound = true;
+                                path = [];
+                                closed_list.ModAppend(fID);
+                                while(parents[successor] != successor)
+                                {
+                                    Wait(WAIT_TIME);
+                                    path.ModAppend(successor);
+                                    successor = parents[successor];
+                                }
+                                path.ModAppend(sID);
+                                path = SortedArray(path, null - CurrentArrayIndex());
+                                break;
+                            }
+                            else 
+                            {
+                                g[successor] = g[qID] + DistanceBetween(getPos(successor), getPos(qID));
+                                h[successor] = DistanceBetween(getPos(successor), finish);
+                                f[successor] = g[successor] + h[successor];
+                            }
+
+                            if(open_list.Contains(successor))
+                            {
+                                competition = open_list.FilteredArray(node => node == successor)[0];
+                                if(f[competition] < f[successor]){}
+                            }
+
+                            else if(closed_list.Contains(successor))
+                            {
+                                competition = closed_list.FilteredArray(node => node == successor)[0];
+                                if(f[competition] < f[successor]){}
+                            }
+
+                            else
+                            {
+                                open_list.ModAppend(successor);
+                            }
+                        }
+                    
+
+                    closed_list.ModAppend(qID);
+                }
+                
+                open_list = [];
+                
+            }
+
+rule:"global init"
+    {
+        PauseMatchTime();
+        DisableInspectorRecording();
+    }
+rule:"player init"
+    Event.OngoingPlayer
+    {
+        CreateHudText(EventPlayer(), editor, null, null, Location.Left, -1, editorcolor, null, null, HudTextRev.StringAndColor, Spectators.DefaultVisibility);
+        Commentary(<"│Press «<0>» to create a simple node;", InputBindingString(Button.PrimaryFire)>, 0);
+        Commentary(<"│Press «<0>» to delete selected node;", InputBindingString(Button.SecondaryFire)>, 1);
+        CreateHudText(EventPlayer(), null, <"Server Load: <0>", ServerLoad()>, null, Location.Right, 0);
+        CreateHudText(EventPlayer(), null, <"Number Nodes: <0>", nodePOS.Length>, null, Location.Right, 1);
+        DisallowButton(EventPlayer(), Button.PrimaryFire);
+        DisallowButton(EventPlayer(), Button.SecondaryFire);
+        DisallowButton(EventPlayer(), Button.Ability2);
+        DisallowButton(EventPlayer(), Button.Ultimate);
+        if(nodePOS.Length > 0)
+        {
+            for (define i = 0; i < nodePOS.Length; i++)
+            {
+                MinWait();
+                CreateEffect(AllPlayers(), 
+                    Type:           Effect.Sphere, 
+                    Color:          currColor[EvaluateOnce(i)], 
+                    Position:       nodePOS[i], 
+                    Radius:         0.5, 
+                    Reevaluation:   EffectRev.VisibleToAndColor);
+                nodeEFF[i] = LastCreatedEntity();
+
+                CreateInWorldText(AllPlayers(), 
+                    Header:         i, 
+                    Position:       nodePOS[i],
+                    Scale:          2,
+                    Clipping:       Clipping.DoNotClip,
+                    Reevaluation:   InworldTextRev.VisibleToAndColor,
+                    TextColor:      currColor[EvaluateOnce(i)],
+                    Spectators.DefaultVisibility);
+                currColor[i] = Color.Green;
+                nodeTEXT[i] = LastTextID(); 
+            }
+        }
+
+        if(connections.Length > 0)
+        {
+            for (define i = 0; i < connections.Length; i++)
+            {
+                for (define t = 0; t < CountOf(connections[i]); t++)
+                {
+                    define currConnection = connections[i][t];
+
+                    if(coneff[currConnection][i] != null && coneff[i][currConnection] != null)
+                    {
+                        continue;
+                    }
+                    else 
+                    {
+                        MinWait();
+                        if(ArrayContains(connections[currConnection], i) && ArrayContains(connections[i], currConnection))
+                        {
+                            CreateBeamEffect(AllPlayers(), 
+                                BeamType.GrappleBeam,
+                                getPos(i), 
+                                getPos(connections[i][t]),
+                                Color.White,
+                                EffectRev.None);
+                        }
+                        else
+                        {
+                            CreateBeamEffect(AllPlayers(), 
+                                BeamType.GoodBeam,
+                                getPos(i), 
+                                getPos(connections[i][t]),
+                                Color.Blue,
+                                EffectRev.None);
+                        }
+
+                        coneff[i][currConnection] = LastCreatedEntity();
+                        coneff[currConnection][i] = LastCreatedEntity();
+                    }
+                }
+            }
+        }
+    }
+rule:"Switch modes"
+    Event.OngoingPlayer
+    if(IsButtonHeld(EventPlayer(), Button.Interact))
+    {
+        switch (editor)
+        {
+            case Edit.Creation:
+                editor = Edit.Editing;
+                editorcolor = Color.Green;
+                CleanUp();
+                Commentary(<"│Press «<0>» to select node(s);", InputBindingString(Button.PrimaryFire)>, 0);
+                Commentary(<"│Press «<0>» to de-select node;", InputBindingString(Button.SecondaryFire)>, 1);
+                Commentary(<"│Press «<0>» to de-select all nodes;", InputBindingString(Button.Reload)>, 2);
+                CreateHudText(EventPlayer(), null, null, "――――――――――――――――――――――――――――――――――――",
+                    Location.Left, 3, null, null, Color.Gray, HudTextRev.None, Spectators.DefaultVisibility);
+                ModifyVariable(texts, Operation.AppendToArray, LastTextID());
+                Commentary(<"│Press «<0>» to connect selected nodes in order;", InputBindingString(Button.Ability2)>, 4);
+                Commentary(<"│Press «<0>» + «<1>» to connect selected nodes directionally;", InputBindingString(Button.Ability2), InputBindingString(Button.Crouch)>, 5);
+                Commentary(<"│Press «<0>» to de-connect selected nodes;", InputBindingString(Button.Ultimate)>, 6);
+                break;
+            case Edit.Editing:
+                editor = Edit.Pathfind;
+                editorcolor = Color.Blue;
+                CleanUp();
+                Commentary(<"│Press «<0>» to select a starting point;", InputBindingString(Button.PrimaryFire)>, 0);
+                Commentary(<"│Press «<0>» to select an ending point;", InputBindingString(Button.SecondaryFire)>, 1);
+                Commentary(<"│Press «<0>» to start the pathfind;", InputBindingString(Button.Ultimate)>, 0);
+                break;
+            case Edit.Pathfind:
+                editor = Edit.Creation;
+                editorcolor = Color.Rose;
+                CleanUp();
+                Commentary(<"│Press «<0>» to create a simple node;", InputBindingString(Button.PrimaryFire)>, 0);
+                Commentary(<"│Press «<0>» to delete selected node;", InputBindingString(Button.SecondaryFire)>, 1);
+                break;
+        }
+    }
+
+rule:"Create Node"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(IsButtonHeld(EventPlayer(), Button.PrimaryFire))
+    if(editor == Edit.Creation)
+        {
+            nodeCreate();
+        }
+
+rule:"Create Node"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+    if(editor == Edit.Creation)
+        {
+            if(selectednode.Length == 0)
+            {
+                SmallMessage(HostPlayer(), "A node must be selected to delete;");
+            }
+
+            else if(selectednode.Length > 1)
+            {
+                SmallMessage(HostPlayer(), "Only 1 node may be deleted at once;");
+            }
+
+            else 
+            {
+            //remove connections first
+                ModifyVariable(connections, Operation.RemoveFromArrayByIndex, grabID(selectednode[0]));
+                ModifyVariable(coneff, Operation.RemoveFromArrayByIndex, grabID(selectednode[0]));
+
+                for (define i = 0; i < nodePOS.Length; i++)
+                {
+                    for (define t = 0; t < CountOf(connections[i]); t++)
+                    {
+                        if(grabID(selectednode[0]) == connections[i][t])
+                        {
+                            ModifyVariable(connections[i], Operation.RemoveFromArrayByIndex, t);
+                            DestroyEffect(coneff[i][grabID(selectednode[0])]);
+                        }
+                    }
+                }
+
+                DestroyEffect(nodeEFF[grabID(selectednode[0])]);
+                DestroyEffect(nodeTEXT[grabID(selectednode[0])]);
+
+                nodeEFF.ModRemoveByIndex(grabID(selectednode[0]));
+                nodeTEXT.ModRemoveByIndex(grabID(selectednode[0]));
+                ModifyVariable(currColor, Operation.RemoveFromArrayByIndex, grabID(selectednode[0]));
+
+                nodePOS.ModRemoveByIndex(grabID(selectednode[0]));
+                selectednode = [];
+            } 
+        }
+
+
+/*rule:"Respawn Nodes"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(currentList != nodePOS.FilteredArray(node => IsInLineOfSight(node, EventPlayer()) && 
+                                        DistanceBetween(EventPlayer(), node) <= 30))
+    {
+        currentList = nodePOS.FilteredArray(node => IsInLineOfSight(node, EventPlayer()) && 
+                                        DistanceBetween(EventPlayer(), node) <= 30);
+
+        for (define i = 0; i < nodePOS.Length; i++)
+        {
+            if(isPreloaded[i] == false)
+            {
+                DestroyEffect(nodeEFF[i]);
+                for (define t = 0; t < connections[i]; t++)
+                {
+                    define nextcon = connections[i][t];
+                    DestroyEffect(coneff[i][nextcon]);
+                    coneff[i][nextcon] = null;
+                }
+            }
+        }
+
+        for (define i = 0; i < currentList.Length; i++)
+        {
+            MinWait();
+            Number currentID = grabID(currentList[i]);
+
+            if(isPreloaded[currentID] == false)
+            {
+                CreateEffect(AllPlayers(), 
+                        Type:           Effect.Sphere, 
+                        Color:          currColor[EvaluateOnce(currentID)], 
+                        Position:       getPos(currentID), 
+                        Radius:         0.5, 
+                        Reevaluation:   EffectRev.VisibleToAndColor);
+                nodeEFF[currentID] = LastCreatedEntity();
+
+                for (define t = 0; t < CountOf(connections[currentID]); t++)
+                {
+                    MinWait();
+                    define nextcon = connections[currentID][t];
+                    if(coneff[nextcon][currentID] == null)
+                    {
+                        MinWait();
+                        CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam,
+                            StartPosition:      getPos(currentID), 
+                            EndPosition:        getPos(nextcon), 
+                            Color:              Color.White,
+                            Reevaluation:       EffectRev.None);
+                        coneff[currentID][nextcon] = LastCreatedEntity();
+                    }
+                }
+
+            }
+        }
+
+        //* Set it after making the effects, so isPreloaded wont set to true
+        //* thus leading to no effects
+        isPreloaded = MappedArray(nodePOS, IsInLineOfSight(ArrayElement(), EventPlayer()) && 
+                                        DistanceBetween(EventPlayer(), ArrayElement()) <= 30);
+
+        Wait(1, WaitBehavior.RestartWhenTrue);
+        LoopIfConditionIsTrue();
+    }*/
+rule:"compile!!"
+    Event.OngoingPlayer
+    if(IsCommunicating(EventPlayer(), Communication.Acknowledge))
+    {
+        EnableInspectorRecording();
+        MinWait();
+        DisableInspectorRecording();
+    }

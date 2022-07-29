@@ -1,0 +1,98 @@
+import "main.ostw";
+
+//!!! IMPORTANT NOTE: in this "Global.connections = Array(Array(1), Array(2, 0), Array(1));"
+//!!! it displays only the connected nodes to it
+rule:"Connect Node"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(CountOf(selectednode) >= 2)
+    if(editor == Edit.Editing)
+    if(IsButtonHeld(EventPlayer(), Button.Ability2))
+        {
+            if(IsButtonHeld(EventPlayer(), Button.Crouch))
+            {
+                for (define i = 0; i < selectednode.Length; i++)
+                {
+                    //? Set connections to empty array
+                    if(i+1 >= CountOf(selectednode))
+                    {
+                        break;
+                    }
+
+                    //? Create a beam between nodes
+                            CreateBeamEffect(AllPlayers(),
+                                BeamType:       BeamType.GoodBeam,
+                                StartPosition:  selectednode[i],
+                                EndPosition:    selectednode[i+1],
+                                Color.Blue, EffectRev.None
+                            );
+                    coneff[grabID(selectednode[i])][grabID(selectednode[i+1])] = LastCreatedEntity();
+                    coneff[grabID(selectednode[i+1])][grabID(selectednode[i])] = LastCreatedEntity();
+                    ModifyVariable(connections[grabID(selectednode[i])], Operation.AppendToArray, grabID(selectednode[i+1]));
+                }
+            }
+
+            //? Bi-directional connections
+            else{
+                for (define i = 0; i < CountOf(selectednode); i++)
+                {
+                    //? Set connections to empty array
+                    if(CountOf(connections[grabID(selectednode[i])]) == 0)
+                    {
+                        connections[grabID(selectednode[i])] = [];
+                    }
+
+                    //? Do not reconnect already set connections
+                    if((ArrayContains(connections[grabID(selectednode[i])], grabID(selectednode[i-1]))) ||
+                        (ArrayContains(connections[grabID(selectednode[i])], grabID(selectednode[i+1]))))
+                    {
+
+                    }
+
+                    //? Do not set the second connection of the last node to anything
+                    else if(i+1 >= CountOf(selectednode))
+                        {
+                            ModifyVariable(connections[grabID(selectednode[i])], Operation.AppendToArray, grabID(selectednode[i-1]));
+                            ModifyVariable(connections[grabID(selectednode[i])], Operation.RemoveFromArrayByValue, -1);
+                        }
+                    
+                    else 
+                        {
+                            //? Create a beam between nodes
+                            CreateBeamEffect(AllPlayers(),
+                                BeamType:       BeamType.GrappleBeam,
+                                StartPosition:  selectednode[i],
+                                EndPosition:    selectednode[i+1],
+                                Color.White, EffectRev.None
+                            );
+                            coneff[grabID(selectednode[i])][grabID(selectednode[i+1])] = LastCreatedEntity();
+                            coneff[grabID(selectednode[i+1])][grabID(selectednode[i])] = LastCreatedEntity();
+                            
+        
+                            //!Inserts the nodes from before and after
+                            ModifyVariable(connections[grabID(selectednode[i])], Operation.AppendToArray, grabID(selectednode[i-1]));
+                            ModifyVariable(connections[grabID(selectednode[i])], Operation.AppendToArray, grabID(selectednode[i+1]));
+
+                            //!Remove all null variables
+                            ModifyVariable(connections[grabID(selectednode[i])], Operation.RemoveFromArrayByValue, -1);
+                        }
+                }
+            }
+        }
+
+rule:"Deconnect nodes"
+    Event.OngoingPlayer
+    if(IsAlive())
+    if(CountOf(selectednode) >= 2)
+    if(editor == Edit.Editing)
+    if(IsButtonHeld(EventPlayer(), Button.Ultimate))
+    {
+        SmallMessage(EventPlayer(), "Deconnecting...");
+        for (define i = 0; i < CountOf(selectednode); i++)
+        {
+            DestroyEffect(coneff[grabID(selectednode[i])][grabID(selectednode[i+1])]);
+            ModifyVariable(connections[grabID(selectednode[i])], Operation.RemoveFromArrayByValue, grabID(selectednode[i - 1]));    
+            ModifyVariable(connections[grabID(selectednode[i])], Operation.RemoveFromArrayByValue, grabID(selectednode[i + 1]));     
+        }
+        SmallMessage(EventPlayer(), "Deconnected!");
+    }

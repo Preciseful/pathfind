@@ -1,0 +1,62 @@
+import "main.ostw";
+
+playervar define LightShafteffect;
+playervar Boolean botstat = false;
+
+//? Player variable used for the starting point
+playervar define start = null;
+//? Player variable used for the ending point
+playervar define destination = null;
+playervar define bot;
+
+
+//* Only for building
+    rule:"Set start point"
+        Event.OngoingPlayer
+        if(IsButtonHeld(EventPlayer(), Button.PrimaryFire))
+        if(editor == Edit.Pathfind)
+            {
+                CreateEffect(EventPlayer(), Effect.LightShaft, Color.Green, start, 0.5, EffectRev.PositionAndRadius);
+                LightShafteffect[0] = LastCreatedEntity();
+                
+                start = ray();
+            }
+
+    rule:"Set end point"
+        Event.OngoingPlayer
+        if(IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+        if(editor == Edit.Pathfind)
+            {
+                CreateEffect(EventPlayer(), Effect.LightShaft, Color.Red, destination, 0.5, EffectRev.PositionAndRadius);
+                LightShafteffect[1] = LastCreatedEntity();
+                
+                destination = ray();
+            }
+    rule:"Remove lightshafts upon exit"
+        Event.OngoingPlayer
+        if(editor != Edit.Pathfind)
+            {
+                DestroyEffect(LightShafteffect[1]);
+                DestroyEffect(LightShafteffect[0]);
+                start = null;
+                destination = null;
+            }
+rule:"Start Pathfind"
+    Event.OngoingPlayer
+    if(editor == Edit.Pathfind)
+    if(IsButtonHeld(EventPlayer(), Button.Ultimate))
+    if(!botstat)
+        {
+            DestroyAllDummyBots();
+            MinWait();
+            CreateDummyBot(Hero.Ana, Team.Team1, -1, start, null);
+        }
+rule:"Pathfind 2"
+    Event.OngoingPlayer
+    if(IsDummyBot())
+    if(IsAlive())
+        {
+            start = HostPlayer().start;
+            destination = HostPlayer().destination;
+            Pathfind(start, destination);
+        }

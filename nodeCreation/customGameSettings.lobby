@@ -1,0 +1,30 @@
+{
+  "Lobby": {
+    "Max Team 1 Players": 1,
+    "Max Team 2 Players": 0
+  },
+  "Modes": {
+    "Assault": {
+      "Limit Roles": "2 Of Each Role Per Team",
+      "Enabled": false
+    },
+    "Control": {
+      "Limit Roles": "2 Of Each Role Per Team",
+      "Enabled": false
+    },
+    "Escort": {
+      "Limit Roles": "2 Of Each Role Per Team",
+      "Enabled": false
+    },
+    "Hybrid": {
+      "Limit Roles": "2 Of Each Role Per Team",
+      "Enabled": false
+    },
+    "Team Deathmatch": {
+      "Game Mode Start": "Manual"
+    }
+  },
+    "Extensions": {
+      "Play More Effects": true
+    }
+  }
