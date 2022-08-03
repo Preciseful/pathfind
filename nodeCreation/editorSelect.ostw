@@ -4,7 +4,7 @@ rule:"Select node"
     Event.OngoingPlayer
     if(IsAlive())
     if(IsButtonHeld(EventPlayer(), Button.PrimaryFire))
-    if(editor == Edit.Editing)
+    if(editor == Edit.Editing || editor == Edit.Attributes)
         {
             if(!ArrayContains(selectednode, nodePOS.SortedArray(node => AngleBetweenVectors(FacingDirectionOf(), DirectionTowards(EyePosition(), node)))[0]))
             {
@@ -18,7 +18,7 @@ rule:"Deselect node"
     Event.OngoingPlayer
     if(IsAlive())
     if(IsButtonHeld(EventPlayer(), Button.SecondaryFire))
-    if(editor == Edit.Editing)
+    if(editor == Edit.Editing || editor == Edit.Attributes)
         {
             define deselectedNode = selectednode.SortedArray(node => AngleBetweenVectors(FacingDirectionOf(), DirectionTowards(EyePosition(), node)))[0];
             define deselectedID = IndexOfArrayValue(nodePOS, deselectedNode);
@@ -29,7 +29,7 @@ rule:"Deselect ALL nodes"
     Event.OngoingPlayer
     if(IsAlive())
     if(IsButtonHeld(EventPlayer(), Button.Reload))
-    if(editor == Edit.Editing)
+    if(editor == Edit.Editing || editor == Edit.Attributes)
         {
             //? Selections is made so CountOf() doesn't re-evaluate, otherwise it will stop mid process.
             Number selections = CountOf(selectednode);

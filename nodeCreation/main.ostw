@@ -2,11 +2,13 @@ import "customGameSettings.lobby";
 import "editorSelect.ostw";
 import "editorConnect.ostw";
 import "pathfind.ostw";
+import "attributes.ostw";
 
 //! Variables
     //? GLOBAL
         //* Nodes Subsection
             globalvar define[] nodePOS = [];
+            globalvar define[] attributes = [];
             define firstcolor: Color.Green;
             define secondcolor: Color.Yellow;
             playervar Number[] nodeID = [];
@@ -23,9 +25,12 @@ import "pathfind.ostw";
     //? PLAYER  
         //* Nodes Subsection
             playervar Vector[] selectednode = [];
+            playervar Number attributeValue = 1;
+            playervar define[] attributePositions = [];
         //* Editor
             playervar String editor = "Creation";
             playervar define[] texts = [];
+            playervar define[] attrtexts = [];
             playervar Color editorcolor = Color.Rose;
             playervar define[] open_list = [];
             playervar define[] closed_list = [];
@@ -54,6 +59,7 @@ import "pathfind.ostw";
             {
                 Creation = "Creation",
                 Editing = "Editing",
+                Attributes = "Attributes",
                 Pathfind = "Pathfind",
                 Bake = "Bake"
             }
@@ -211,6 +217,12 @@ import "pathfind.ostw";
                                 }
                                 path.ModAppend(sID);
                                 path = SortedArray(path, null - CurrentArrayIndex());
+                                for (define z = 0; z < path.Length; z++)
+                                {
+                                    StartThrottleInDirection(EventPlayer(), DirectionTowards(EventPlayer(), getPos(path[z])), 1);
+                                    WaitUntil(DistanceBetween(EventPlayer(), getPos(path[z])) <= 1.5, 99999);
+                                }
+                                StopThrottleInDirection();
                                 break;
                             }
                             else 
@@ -253,6 +265,7 @@ rule:"global init"
     }
 rule:"player init"
     Event.OngoingPlayer
+    if(!IsDummyBot())
     {
         CreateHudText(EventPlayer(), editor, null, null, Location.Left, -1, editorcolor, null, null, HudTextRev.StringAndColor, Spectators.DefaultVisibility);
         Commentary(<"│Press «<0>» to create a simple node;", InputBindingString(Button.PrimaryFire)>, 0);
@@ -350,14 +363,32 @@ rule:"Switch modes"
                 Commentary(<"│Press «<0>» + «<1>» to connect selected nodes directionally;", InputBindingString(Button.Ability2), InputBindingString(Button.Crouch)>, 5);
                 Commentary(<"│Press «<0>» to de-connect selected nodes;", InputBindingString(Button.Ultimate)>, 6);
                 break;
+
             case Edit.Editing:
+                editor = Edit.Attributes;
+                editorcolor = CustomColor(34, 106, 214, 255);
+                CleanUp();
+                Commentary(<"│Press «<0>» to select node(s);", InputBindingString(Button.PrimaryFire)>, 0);
+                Commentary(<"│Press «<0>» to de-select node;", InputBindingString(Button.SecondaryFire)>, 1);
+                Commentary(<"│Press «<0>» to de-select all nodes;", InputBindingString(Button.Reload)>, 2);
+                CreateHudText(EventPlayer(), null, null, "――――――――――――――――――――――――――――――――――――",
+                    Location.Left, 3, null, null, Color.Gray, HudTextRev.None, Spectators.DefaultVisibility);
+                ModifyVariable(texts, Operation.AppendToArray, LastTextID());
+                Commentary(<"│Press «<0>» to add attribute: <1>", InputBindingString(Button.Ultimate), attributeValue>, 4);
+                Commentary(<"│Press «<1>» + «<0>» to delete attribute: <2>", InputBindingString(Button.Ultimate), InputBindingString(Button.Crouch), attributeValue>, 5);
+                Commentary(<"│Press «<0>» to raise attribute level;", InputBindingString(Button.Ability2)>, 6);
+                Commentary(<"│Press «<1>» + «<0>» to decrease attribute level;", InputBindingString(Button.Ability2), InputBindingString(Button.Crouch)>, 7);
+                break;
+
+            case Edit.Attributes:
                 editor = Edit.Pathfind;
-                editorcolor = Color.Blue;
+                editorcolor = Color.SkyBlue;
                 CleanUp();
                 Commentary(<"│Press «<0>» to select a starting point;", InputBindingString(Button.PrimaryFire)>, 0);
                 Commentary(<"│Press «<0>» to select an ending point;", InputBindingString(Button.SecondaryFire)>, 1);
                 Commentary(<"│Press «<0>» to start the pathfind;", InputBindingString(Button.Ultimate)>, 0);
                 break;
+
             case Edit.Pathfind:
                 editor = Edit.Creation;
                 editorcolor = Color.Rose;
@@ -377,7 +408,7 @@ rule:"Create Node"
             nodeCreate();
         }
 
-rule:"Create Node"
+rule:"Delete Node"
     Event.OngoingPlayer
     if(IsAlive())
     if(IsButtonHeld(EventPlayer(), Button.SecondaryFire))
@@ -418,7 +449,7 @@ rule:"Create Node"
                 nodeTEXT.ModRemoveByIndex(grabID(selectednode[0]));
                 ModifyVariable(currColor, Operation.RemoveFromArrayByIndex, grabID(selectednode[0]));
 
-                nodePOS.ModRemoveByIndex(grabID(selectednode[0]));
+                nodePOS.ModRemoveByValue(selectednode[0]);
                 selectednode = [];
             } 
         }
@@ -497,3 +528,8 @@ rule:"compile!!"
         MinWait();
         DisableInspectorRecording();
     }
+
+void Walk() "Pathfind walk"
+{
+
+}

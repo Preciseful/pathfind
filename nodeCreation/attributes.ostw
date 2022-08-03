@@ -1,0 +1,111 @@
+import "main.ostw";
+
+
+
+rule: "Increase/Decrease attribute value"
+    Event.OngoingPlayer
+    if(editor == Edit.Attributes)
+    if(IsButtonHeld(EventPlayer(), Button.Ability2))
+    {
+        if(!IsButtonHeld(EventPlayer(), Button.Crouch))
+        {
+            attributeValue++;
+        } 
+        else 
+        {
+            if(attributeValue > 1)
+            {
+                attributeValue--;
+            }
+        }
+    }
+
+rule: "Add attribute"
+    Event.OngoingPlayer
+    if(editor == Edit.Attributes)
+    if(IsButtonHeld(EventPlayer(), Button.Ultimate))
+    if(selectednode.Length > 0)
+    {
+        if(IsButtonHeld(EventPlayer(), Button.Crouch))
+        {
+            String currentAttribute: attributes.FilteredArray(string => StringSlice(string, 0, 2) == <"<0><1>", grabID(selectednode[0]), grabID(selectednode[1])>)[0];
+            if(currentAttribute.Contains($"{attributeValue}"))
+            {
+                if(currentAttribute.Replace($"{grabID(selectednode[0])}{grabID(selectednode[1])}", "Z").Contains($"{attributeValue}") == false)
+                {
+                    SmallMessage(EventPlayer(), "No attribute found.");
+                    Abort();
+                }
+
+                String value = currentAttribute.Replace($";{attributeValue}", "");
+                Number indexOfVal = IndexOfArrayValue(attributes, currentAttribute);
+
+                attributes[indexOfVal] = value;
+                attrtexts[grabID(selectednode[0])][grabID(selectednode[1])] = StringReplace(attrtexts[grabID(selectednode[0])][grabID(selectednode[1])], $"{attributeValue}\r\n", "");
+            }
+            else 
+            {
+                SmallMessage(EventPlayer(), "No attribute found.");
+            }
+
+        }
+        else 
+        {
+            if(selectednode.Length < 2)
+            {
+                SmallMessage(EventPlayer(), "Min of 2 nodes.");
+            }
+
+            else if(selectednode.Length > 2)
+            {
+                SmallMessage(EventPlayer(), "Max of 2 nodes.");
+            }
+
+            else 
+            {
+                String currentAttribute: attributes.FilteredArray(string => StringSlice(string, 0, 2) == <"<0><1>", grabID(selectednode[0]), grabID(selectednode[1])>)[0];
+                if(currentAttribute != null)
+                {
+                    if(currentAttribute.Replace($"{grabID(selectednode[0])}{grabID(selectednode[1])}", "Z").Contains($"{attributeValue}"))
+                    {
+                        SmallMessage(EventPlayer(), "Attribute has already been added.");
+                        Abort();
+                    }
+
+                    String value = currentAttribute;
+                    Number indexOfVal = IndexOfArrayValue(attributes, value);
+
+                    value = $"{value};{attributeValue}";
+
+                    attributes[indexOfVal] = value;
+                }
+
+                else 
+                {
+                    attributes.ModAppend($"{grabID(selectednode[0])}{grabID(selectednode[1])};{attributeValue}");
+                }
+
+                Vector currentPosition = Vector((XOf(selectednode[0]) + XOf(selectednode[1]))/2,
+                                                (YOf(selectednode[0]) + YOf(selectednode[1]))/2,
+                                                (ZOf(selectednode[0]) + ZOf(selectednode[1]))/2);
+
+                currentPosition = Vector((XOf(selectednode[0]) + XOf(currentPosition))/2,
+                                        (YOf(selectednode[0]) + YOf(currentPosition))/2,
+                                        (ZOf(selectednode[0]) + ZOf(currentPosition))/2);
+
+                if(attrtexts[grabID(selectednode[0])][grabID(selectednode[1])] == null)
+                {
+                    attrtexts[grabID(selectednode[0])][grabID(selectednode[1])] = $"{attributeValue}";
+                    CreateInWorldText(AllPlayers(), attrtexts[grabID(selectednode[0])][grabID(selectednode[1])], currentPosition, 1.75, Clipping.ClipAgainstSurfaces, InworldTextRev.String, CustomColor(34, 106, 214, 255));
+                }
+
+                else 
+                {
+                    attrtexts[grabID(selectednode[0])][grabID(selectednode[1])] = 
+                        <"<1>\r\n<0>", attrtexts[grabID(selectednode[0])][grabID(selectednode[1])], attributeValue>;
+                }
+
+            }
+        }
+    }
+
