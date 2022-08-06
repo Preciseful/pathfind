@@ -1,12 +1,32 @@
-import dijkstraFile
-Array = dijkstraFile.Array;
-Vector = dijkstraFile.Vector;
+import distanceMatrix
+Array = distanceMatrix.Array;
+Vector = distanceMatrix.Vector;
 
 # ^^^ Dont modify above ^^^
 
 
 #Node Positions
-nodePOS = Array(Vector(0, 0, 0))
+nodePOS = Array(Vector(86.505, 12.672, -75.755), Vector(87.478, 12.653, -70.655), Vector(103.264, 12.673, -73.868), Vector(
+			104.342, 12.723, -78.811), Vector(103.695, 9.688, -88.593), Vector(97.549, 12.723, -102.052), Vector(94.297, 12.723, -115.785),
+			Vector(75.208, 10.696, -109.414), Vector(79.130, 12.684, -98.634), Vector(90.447, 12.723, -102.776), Vector(73.245, 10.723,
+			-115.295), Vector(56.311, 10.723, -113.914), Vector(58.402, 10.723, -105.348), Vector(53.562, 10.723, -104.142), Vector(54.332,
+			10.551, -97.113), Vector(63.862, 11.748, -96.187), Vector(38.177, 10.751, -98.237), Vector(36.836, 12.723, -105.563), Vector(
+			55.695, 17.723, -110.496), Vector(58.013, 17.723, -103.980), Vector(60.460, 18.725, -93.254), Vector(61.935, 18.037, -86.564),
+			Vector(65.689, 12.723, -73.971), Vector(67.991, 12.723, -70.230), Vector(72.340, 12.660, -70.972), Vector(75.738, 12.658,
+			-66.101), Vector(67.835, 15.919, -62.500), Vector(67.050, 17.786, -68.322), Vector(56.104, 21.003, -65.845), Vector(54.848,
+			18.046, -81.696), Vector(55.558, 6.723, -67.608), Vector(59.393, 6.723, -75.771), Vector(58.796, 4.723, -84.443), Vector(
+			67.154, 4.723, -83.147), Vector(54.552, 6.723, -105.074), Vector(48.913, 5.890, -66.823), Vector(40.931, 7.889, -88.318),
+			Vector(33.021, 9.934, -92.812), Vector(30.337, 14, -81.804), Vector(30.135, 8, -80.081), Vector(39.580, 6.098, -72.036),
+			Vector(41.743, 5.009, -64.596), Vector(35.659, 5.250, -56.594), Vector(38.405, 5.250, -48.059), Vector(43.730, 5.238, -49.873),
+			Vector(58.180, 11.702, -59.105), Vector(56.272, 11.723, -73.617), Vector(54.887, 11.513, -87.055), Vector(58.454, 10.916,
+			-88.415), Vector(47.377, 11.621, -85.244), Vector(49.189, 11.493, -76.809));
 
-#Edges here
-connections = Array(Array(1, 2))
+#Edges
+connections = Array(Array(1, 3, 8, 25), Array(0, 2, 25), Array(1, 3), Array(0, 2, 4), Array(3, 5), Array(4, 6, 9), Array(5, 7, 9),
+			Array(6, 8, 10, 34), Array(0, 7, 9, 15), Array(5, 6, 8), Array(7, 11), Array(10, 12), Array(11, 13), Array(12, 14), Array(13,
+			15, 16, 36, 40, 48), Array(8, 14, 33, 36, 48), Array(14, 17, 34, 37), Array(16, 18), Array(17, 19), Array(7, 16, 18, 20),
+			Array(14, 15, 19, 21), Array(20, 22, 29), Array(21, 23, 46), Array(22, 24, 30), Array(23, 25, 33), Array(0, 1, 24, 26), Array(
+			25, 27, 45), Array(26, 28, 29), Array(27, 41), Array(21, 27, 50), Array(23, 31, 35), Array(30, 32), Array(31, 33, 34), Array(
+			32), Array(7, 16, 32), Array(30, 36, 40, 41), Array(14, 15, 35, 37, 38, 39, 40), Array(16, 36), Array(36), Array(36, 40),
+			Array(14, 35, 36, 39, 41), Array(35, 40, 42, 44), Array(41, 43), Array(42, 44), Array(41, 43, 45), Array(44, 46), Array(22, 45,
+			47, 50), Array(14, 46, 48, 49), Array(14, 15, 47), Array(36, 47, 50), Array(40, 46, 49));
