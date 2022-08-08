@@ -96,9 +96,9 @@ class Graph:
 import MainFile
 
 
-nodePOS = MainFile.nodePOS
+nodePOS = MainFile.nodes
 
-connections = MainFile.connections
+connections = MainFile.edges
 
 distance_matrix = ["" for y in range(128 * 10)]
 
