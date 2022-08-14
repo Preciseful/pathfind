@@ -2,6 +2,7 @@
 from collections import defaultdict
 import math
 from collections import OrderedDict
+from sqlite3 import connect
 import string
 
 
@@ -11,15 +12,17 @@ def Array(*content):
     return list(content)
 
 class Vector:
-	x = 0
-	y = 0
-	z = 0
+    x = 0
+    y = 0
+    z = 0
 
-	def __init__(self, x, y, z):
-		self.x = float(x)
-		self.y = float(y)
-		self.z = float(z)
+    def __init__(self, x, y, z):
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
 
+def vectstr(self):
+	return  str("Vector(" + str(self.x) + ", " + str(self.y) + ", " + str(self.x) + ")")
 
 def distance(self, operand):
         return round(math.sqrt((self.x - operand.x)**2 + (self.y - operand.y)**2 + (self.z - operand.z)**2), 0)
@@ -144,9 +147,19 @@ secondgraph = str(secondgraph)
 
 secondgraph = secondgraph.replace("'", "")
 print(secondgraph)
-    
+
+secondPOS = "";
+
+for i in range(v):
+    if(i != v - 1):
+        secondPOS += vectstr(nodePOS[i]) + ", "
+    else:
+        secondPOS += vectstr(nodePOS[i])
+
+secondPOS = "Array(" + secondPOS + ");"
 
     
 print("\n\n\n\nOver")
-pyperclip.copy("actions\n{\n    Global.graph = " + secondgraph + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n}')
+pyperclip.copy("actions\n{\n    Global.graph = " + secondgraph + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n' + 
+"    Global.nodePOS = " + secondPOS + "\n}")
 
