@@ -1,9 +1,5 @@
-
 from collections import defaultdict
 import math
-from collections import OrderedDict
-from sqlite3 import connect
-import string
 
 
 import pyperclip
@@ -109,12 +105,12 @@ for i in range(v):
             else:
                 overwatch_graph[i][t] = 999;
 
-stringgraph = ["" for y in range(v)]
-secondgraph = stringgraph
-encoded = []
+graph1 = ["" for y in range(v)]
+graphinstring = graph1
+finalgraph2 = graph1
 
 
-unusedalpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáçèéêëìíîïð!@#$%^&*()-_=+[{]};:<,>.?/~`€ƒ‰Œ•"
+unusedalpha = "23456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿ"
 alphabet = unusedalpha[0:v+1]
 
 for i in range(v):
@@ -122,33 +118,64 @@ for i in range(v):
     
     for t in overwatch_graph[i]:
         if(t == 999):
-            tempstring = tempstring + " "
+            tempstring += " "
         else:
-            tempstring = tempstring + alphabet[t]
+            tempstring += alphabet[t]
 
-    stringgraph[i] = tempstring
+    if v > 128:
+        finalgraph2[i] = tempstring[128:]
+        graph1[i] = tempstring[0:128]
+    else:
+        graph1[i] = tempstring
+        
 
-stringgraph = str(stringgraph)
+graph1 = str(graph1)
 
-stringgraph = stringgraph.replace("[", "Array(")
-stringgraph = stringgraph.replace("]", ")")
-secondgraph = stringgraph
-secondgraph = stringgraph.replace("Array(", "").replace(")", "")
-secondgraph = secondgraph.split(",")
+graph1 = graph1.replace("[", "Array(")
+graph1 = graph1.replace("]", ")")
+graphinstring = graph1
+graphinstring = graph1.replace("Array(", "").replace(")", "")
+graphinstring = graphinstring.split(",")
 
-for i in range(len(secondgraph)):
-    secondgraph[i] = secondgraph[i].replace("'", '")')
-    secondgraph[i] = secondgraph[i].replace('")', 'Custom String("', 1)
+for i in range(len(graphinstring)):
+    graphinstring[i] = graphinstring[i].replace("'", '")')
+    graphinstring[i] = graphinstring[i].replace('")', 'Custom String("', 1)
 
-secondgraph = str(secondgraph)
-secondgraph = secondgraph.replace("[", "Array(")
-secondgraph = secondgraph.replace("]", ")")
-secondgraph = str(secondgraph)
+graphinstring = str(graphinstring)
+graphinstring = graphinstring.replace("[", "Array(")
+graphinstring = graphinstring.replace("]", ")")
+graphinstring = str(graphinstring)
 
-secondgraph = secondgraph.replace("'", "")
-print(secondgraph)
+graphinstring = graphinstring.replace("'", "")
+graph1 = graphinstring
+
+print(graph1)
 
 secondPOS = "";
+
+if(v > 128):   
+    finalgraph2 = str(finalgraph2) 
+    graphinstring = ["" for y in range(v)]
+
+    finalgraph2 = finalgraph2.replace("[", "Array(")
+    finalgraph2 = finalgraph2.replace("]", ")")
+    graphinstring = finalgraph2
+    graphinstring = finalgraph2.replace("Array(", "").replace(")", "")
+    graphinstring = graphinstring.split(",")
+
+    for i in range(len(graphinstring)):
+        graphinstring[i] = graphinstring[i].replace("'", '")')
+        graphinstring[i] = graphinstring[i].replace('")', 'Custom String("', 1)
+
+    graphinstring = str(graphinstring)
+    graphinstring = graphinstring.replace("[", "Array(")
+    graphinstring = graphinstring.replace("]", ")")
+    graphinstring = str(graphinstring)
+
+    graphinstring = graphinstring.replace("'", "")
+    finalgraph2 = graphinstring
+    print("graph2\n" + graphinstring)
+
 
 for i in range(v):
     if(i != v - 1):
@@ -160,6 +187,11 @@ secondPOS = "Array(" + secondPOS + ");"
 
     
 print("\n\n\n\nOver")
-pyperclip.copy("actions\n{\n    Global.graph = " + secondgraph + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n' + 
-"    Global.nodePOS = " + secondPOS + "\n}")
 
+if(v > 128):
+    pyperclip.copy("actions\n{\n    Global.graph = " + graph1 + ";\n    Global.graph1 = " + finalgraph2 + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n' + 
+    "    Global.nodePOS = " + secondPOS + "\n}")
+
+else:   
+    pyperclip.copy("actions\n{\n    Global.graph = " + graph1 + ';\n    Global.alphabet = Custom String("' + alphabet + '");\n' + 
+    "    Global.nodePOS = " + secondPOS + "\n}")
